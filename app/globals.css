@@ -2,13 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
+/* -------------------------------------------------------------------------
+   Design tokens: โหมดกลางคืน (ดวงจันทร์) เป็นค่าเริ่มต้น, โหมดกลางวัน (ดวงอาทิตย์)
+   สลับผ่าน [data-theme="light"] บน <html>
+------------------------------------------------------------------------- */
+:root,
+[data-theme="dark"] {
+  --bg: #0a1120;
+  --panel: #121b2e;
+  --panel-alt: #0e1626;
+  --sidebar: #0d1526;
+  --text: #eaf0f8;
+  --text-muted: #8593a8;
+  --text-dim: #5c6b80;
+  --text-faint: #3e4a5e;
+  --border: rgba(255, 255, 255, 0.06);
+  --border-soft: rgba(255, 255, 255, 0.05);
+  --border-strong: rgba(255, 255, 255, 0.08);
+  --border-stronger: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(3, 5, 8, 0.7);
+  --font-display: var(--font-space-grotesk), "Space Grotesk", sans-serif;
+  --font-body: var(--font-inter), "Inter", sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #eef2f8;
+  --panel: #ffffff;
+  --panel-alt: #f2f5fa;
+  --sidebar: #ffffff;
+  --text: #101826;
+  --text-muted: #55637a;
+  --text-dim: #76849b;
+  --text-faint: #a7b2c4;
+  --border: rgba(16, 24, 38, 0.08);
+  --border-soft: rgba(16, 24, 38, 0.06);
+  --border-strong: rgba(16, 24, 38, 0.12);
+  --border-stronger: rgba(16, 24, 38, 0.16);
+  --overlay: rgba(148, 163, 184, 0.35);
+  color-scheme: light;
+}
+
 html,
 body {
   padding: 0;
   margin: 0;
-  background: #0a1120;
+  background: var(--bg);
+  transition: background-color 0.25s ease;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  color: var(--text);
+  font-family: var(--font-body);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,0 +1,277 @@
+"use client";
+
+import React, { createContext, useContext, useEffect, useState } from "react";
+
+const LangContext = createContext(null);
+const STORAGE_KEY = "inverter_lang";
+
+export const DICT = {
+  th: {
+    brand_title: "INVERTER",
+    brand_sub: "CONTROL CENTER",
+    api_doc_title: "เอกสาร API",
+    api_doc_sub: "เชื่อมต่อและจัดการผ่าน API",
+    nav_overview: "ภาพรวม",
+    nav_section_home: "ควบคุมบ้าน",
+    nav_devices: "อุปกรณ์ทั้งหมด",
+    nav_rooms: "ห้องต่างๆ",
+    nav_schedule: "การตั้งเวลา",
+    nav_modes: "โหมดการทำงาน",
+    nav_section_factory: "ควบคุมโรงงาน",
+    nav_machines: "เครื่องจักรทั้งหมด",
+    nav_lines: "ไลน์การผลิต",
+    nav_factoryPower: "พลังงานโรงงาน",
+    nav_alerts: "การแจ้งเตือน",
+    nav_section_system: "ระบบ",
+    nav_inverter: "อินเวอร์เตอร์",
+    nav_battery: "แบตเตอรี่",
+    nav_reports: "รายงานพลังงาน",
+    nav_settings: "ตั้งค่า",
+    nav_users: "ผู้ใช้งาน",
+    mobile_alerts: "แจ้งเตือน",
+    mobile_devices: "อุปกรณ์",
+    mobile_machines: "เครื่องจักร",
+    weather_sunny: "แดดออก",
+    admin_name: "ผู้ดูแลระบบ",
+    admin: "Admin",
+    page_title: "ภาพรวมระบบ",
+    page_sub: "ตรวจสอบและควบคุมระบบไฟฟ้าผ่าน API อินเวอร์เตอร์ของคุณ",
+    demo_badge: "โหมดสาธิต (ข้อมูลตัวอย่าง)",
+    live_badge: "เชื่อมต่อ API สำเร็จ",
+    stat_produced: "พลังงานผลิตวันนี้",
+    stat_used: "พลังงานใช้วันนี้",
+    stat_exported: "พลังงานส่งออก",
+    stat_saved: "ประหยัดค่าไฟวันนี้",
+    vs_yesterday: "จากเมื่อวาน",
+    realtime_status: "สถานะพลังงานแบบเรียลไทม์",
+    flow_solar: "โซลาร์เซลล์",
+    flow_battery: "แบตเตอรี่",
+    flow_inverter: "อินเวอร์เตอร์",
+    flow_grid: "การไฟฟ้า",
+    flow_home_load: "โหลดในบ้าน",
+    flow_normal: "ทำงานปกติ",
+    energy_chart: "กราฟพลังงาน",
+    range_day: "วัน",
+    range_week: "สัปดาห์",
+    range_month: "เดือน",
+    range_year: "ปี",
+    legend_produced: "ผลิต",
+    legend_used: "ใช้",
+    legend_exported: "ส่งออก",
+    legend_battery: "แบตเตอรี่ (%)",
+    home_devices_title: "ควบคุมอุปกรณ์ในบ้าน",
+    view_all_devices: "ดูอุปกรณ์ทั้งหมด",
+    factory_machines_title: "ควบคุมเครื่องจักรในโรงงาน",
+    view_all_machines: "ดูเครื่องจักรทั้งหมด",
+    machine_on: "ทำงาน",
+    machine_off: "หยุด",
+    inverter_status_title: "สถานะอินเวอร์เตอร์และระบบ",
+    view_more: "ดูรายละเอียดเพิ่มเติม",
+    inv_model: "รุ่น",
+    inv_status: "สถานะ",
+    inv_status_normal: "● ทำงานปกติ",
+    inv_power: "กำลังไฟฟ้า",
+    inv_voltage: "แรงดันไฟฟ้า",
+    inv_freq: "ความถี่",
+    inv_temp: "อุณหภูมิ",
+    inv_wifi: "Wi-Fi",
+    inv_wifi_connected: "● เชื่อมต่อแล้ว",
+    inv_updated: "อัปเดตล่าสุด",
+    anomaly_title: "พฤติกรรมการใช้ไฟ & AI ตรวจจับความผิดปกติ",
+    anomaly_items: "รายการ",
+    anomaly_chart_label: "การใช้ไฟจริง เทียบกับช่วงปกติที่ AI เรียนรู้ไว้",
+    anomaly_legend_actual: "ใช้จริง",
+    notices_title: "การแจ้งเตือนล่าสุด",
+    notices_view_all: "ดูทั้งหมด",
+    ai_button_label: "เปิดผู้ช่วย AI",
+    ai_title: "ผู้ช่วย AI",
+    ai_greeting: "สวัสดีครับ ผมคือผู้ช่วย AI — สั่งงานด้วยเสียงหรือพิมพ์ได้เลย เช่น “เปิดไฟห้องนั่งเล่น” หรือ “มีอะไรผิดปกติไหม”",
+    ai_unsupported: "เบราว์เซอร์นี้ยังไม่รองรับคำสั่งเสียง ใช้การพิมพ์แทนได้",
+    ai_placeholder_listening: "กำลังฟัง…",
+    ai_placeholder: "พิมพ์คำสั่ง เช่น เปิดแอร์ห้องนอน",
+    ai_not_found: "ไม่พบอุปกรณ์ที่ตรงกับคำสั่ง ลองระบุชื่ออุปกรณ์หรือห้องให้ชัดเจนขึ้น",
+    ai_fallback: "รับทราบคำสั่ง — จุดนี้คือตำแหน่งที่จะเชื่อมต่อโมเดล AI จริงในอนาคต",
+    ai_turned_on: "เปิดใช้งาน",
+    ai_turned_off: "ปิดใช้งาน",
+    ai_done: "เรียบร้อยแล้ว",
+    ai_anomaly_found: "พบ",
+    ai_anomaly_latest: "ความผิดปกติ ล่าสุด:",
+    theme_toggle_to_light: "สลับเป็นโหมดกลางวัน",
+    theme_toggle_to_dark: "สลับเป็นโหมดกลางคืน",
+    lang_toggle: "เปลี่ยนภาษา",
+    // settings / API config page
+    settings_title: "ตั้งค่า",
+    settings_sub: "เชื่อมต่ออุปกรณ์อินเวอร์เตอร์ของคุณเข้ากับแดชบอร์ดนี้",
+    settings_api_section: "การเชื่อมต่อ API เครื่องของคุณ",
+    settings_api_desc: "หากคุณมีอินเวอร์เตอร์ที่บ้านหรือโรงงานของตัวเอง ใส่ที่อยู่ API และคีย์ของเครื่องคุณที่นี่ ระบบจะบันทึกไว้ในเบราว์เซอร์นี้เท่านั้น (ไม่ส่งให้ผู้อื่น) เพื่อดึงข้อมูลจากเครื่องของคุณโดยเฉพาะ",
+    settings_api_url_label: "URL ของ API เครื่องอินเวอร์เตอร์",
+    settings_api_url_placeholder: "เช่น https://192.168.1.50:8080 หรือ https://api.myhome-inverter.com",
+    settings_api_key_label: "API Key (ถ้ามี)",
+    settings_api_key_placeholder: "วาง API Key ของอุปกรณ์คุณที่นี่",
+    settings_save: "บันทึกและเชื่อมต่อ",
+    settings_test: "ทดสอบการเชื่อมต่อ",
+    settings_clear: "ล้างค่าและกลับสู่โหมดสาธิต",
+    settings_status_idle: "ยังไม่ได้ตั้งค่า — ระบบกำลังแสดงข้อมูลตัวอย่าง",
+    settings_status_testing: "กำลังทดสอบการเชื่อมต่อ…",
+    settings_status_ok: "เชื่อมต่อสำเร็จ กำลังดึงข้อมูลจากเครื่องของคุณ",
+    settings_status_fail: "เชื่อมต่อไม่สำเร็จ กรุณาตรวจสอบ URL / เครือข่าย / CORS ของอุปกรณ์ (ระบบจะแสดงข้อมูลตัวอย่างแทน)",
+    settings_note_title: "รูปแบบ API ที่รองรับ",
+    settings_note_body: "ระบบจะเรียก GET {url}/status สำหรับข้อมูลอินเวอร์เตอร์ และ GET {url}/devices สำหรับอุปกรณ์ในบ้าน หากเครื่องของคุณใช้รูปแบบอื่น สามารถทำ endpoint พร็อกซีให้ตรงรูปแบบนี้ได้",
+    settings_saved_at: "บันทึกล่าสุด",
+  },
+  en: {
+    brand_title: "INVERTER",
+    brand_sub: "CONTROL CENTER",
+    api_doc_title: "API Documentation",
+    api_doc_sub: "Connect and manage via API",
+    nav_overview: "Overview",
+    nav_section_home: "Home Control",
+    nav_devices: "All Devices",
+    nav_rooms: "Rooms",
+    nav_schedule: "Schedule",
+    nav_modes: "Modes",
+    nav_section_factory: "Factory Control",
+    nav_machines: "All Machines",
+    nav_lines: "Production Lines",
+    nav_factoryPower: "Factory Power",
+    nav_alerts: "Alerts",
+    nav_section_system: "System",
+    nav_inverter: "Inverter",
+    nav_battery: "Battery",
+    nav_reports: "Energy Reports",
+    nav_settings: "Settings",
+    nav_users: "Users",
+    mobile_alerts: "Alerts",
+    mobile_devices: "Devices",
+    mobile_machines: "Machines",
+    weather_sunny: "Sunny",
+    admin_name: "Administrator",
+    admin: "Admin",
+    page_title: "System Overview",
+    page_sub: "Monitor and control your power system via your inverter's API",
+    demo_badge: "Demo mode (sample data)",
+    live_badge: "Connected to your API",
+    stat_produced: "Energy Produced Today",
+    stat_used: "Energy Used Today",
+    stat_exported: "Energy Exported",
+    stat_saved: "Savings Today",
+    vs_yesterday: "vs yesterday",
+    realtime_status: "Real-time Energy Status",
+    flow_solar: "Solar Panels",
+    flow_battery: "Battery",
+    flow_inverter: "Inverter",
+    flow_grid: "Grid",
+    flow_home_load: "Home Load",
+    flow_normal: "Operating normally",
+    energy_chart: "Energy Chart",
+    range_day: "Day",
+    range_week: "Week",
+    range_month: "Month",
+    range_year: "Year",
+    legend_produced: "Produced",
+    legend_used: "Used",
+    legend_exported: "Exported",
+    legend_battery: "Battery (%)",
+    home_devices_title: "Home Device Control",
+    view_all_devices: "View all devices",
+    factory_machines_title: "Factory Machine Control",
+    view_all_machines: "View all machines",
+    machine_on: "Running",
+    machine_off: "Stopped",
+    inverter_status_title: "Inverter & System Status",
+    view_more: "View more details",
+    inv_model: "Model",
+    inv_status: "Status",
+    inv_status_normal: "● Normal operation",
+    inv_power: "Power",
+    inv_voltage: "Voltage",
+    inv_freq: "Frequency",
+    inv_temp: "Temperature",
+    inv_wifi: "Wi-Fi",
+    inv_wifi_connected: "● Connected",
+    inv_updated: "Last updated",
+    anomaly_title: "Usage Behavior & AI Anomaly Detection",
+    anomaly_items: "items",
+    anomaly_chart_label: "Actual usage vs. the normal range AI has learned",
+    anomaly_legend_actual: "Actual",
+    notices_title: "Recent Notifications",
+    notices_view_all: "View all",
+    ai_button_label: "Open AI Assistant",
+    ai_title: "AI Assistant",
+    ai_greeting: "Hi, I'm your AI assistant — command me by voice or text, e.g. \"turn on the living room light\" or \"anything unusual?\"",
+    ai_unsupported: "This browser doesn't support voice commands yet. You can type instead.",
+    ai_placeholder_listening: "Listening…",
+    ai_placeholder: "Type a command, e.g. turn on bedroom AC",
+    ai_not_found: "No matching device found. Try naming the device or room more clearly.",
+    ai_fallback: "Got it — this is where a real AI model will connect in the future.",
+    ai_turned_on: "Turned on",
+    ai_turned_off: "Turned off",
+    ai_done: "successfully",
+    ai_anomaly_found: "Found",
+    ai_anomaly_latest: "anomalies. Latest:",
+    theme_toggle_to_light: "Switch to day mode",
+    theme_toggle_to_dark: "Switch to night mode",
+    lang_toggle: "Change language",
+    settings_title: "Settings",
+    settings_sub: "Connect your own inverter device to this dashboard",
+    settings_api_section: "Your Device's API Connection",
+    settings_api_desc: "If you have your own inverter at home or at your factory, enter its API URL and key here. This is saved only in this browser (never sent anywhere else) so this dashboard can pull data specifically from your device.",
+    settings_api_url_label: "Your Inverter API URL",
+    settings_api_url_placeholder: "e.g. https://192.168.1.50:8080 or https://api.myhome-inverter.com",
+    settings_api_key_label: "API Key (optional)",
+    settings_api_key_placeholder: "Paste your device's API key here",
+    settings_save: "Save & Connect",
+    settings_test: "Test Connection",
+    settings_clear: "Clear & return to demo mode",
+    settings_status_idle: "Not configured yet — showing sample data",
+    settings_status_testing: "Testing connection…",
+    settings_status_ok: "Connected successfully. Pulling data from your device",
+    settings_status_fail: "Connection failed. Check your device's URL / network / CORS settings (showing sample data instead)",
+    settings_note_title: "Supported API shape",
+    settings_note_body: "This dashboard calls GET {url}/status for inverter data and GET {url}/devices for home devices. If your device uses a different format, you can add a small proxy endpoint that matches this shape.",
+    settings_saved_at: "Last saved",
+  },
+};
+
+export function translateWith(dict, key) {
+  return dict[key] ?? key;
+}
+
+export function LangProvider({ children }) {
+  const [lang, setLang] = useState("th");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    let initial = "th";
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === "th" || saved === "en") initial = saved;
+    } catch (e) {}
+    setLang(initial);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, lang);
+    } catch (e) {}
+    document.documentElement.setAttribute("lang", lang);
+  }, [lang, mounted]);
+
+  const toggleLang = () => setLang((l) => (l === "th" ? "en" : "th"));
+  const t = (key) => translateWith(DICT[lang], key);
+  const pick = (thVal, enVal) => (lang === "th" ? thVal : enVal ?? thVal);
+
+  return (
+    <LangContext.Provider value={{ lang, setLang, toggleLang, t, pick, mounted }}>
+      {children}
+    </LangContext.Provider>
+  );
+}
+
+export function useLang() {
+  const ctx = useContext(LangContext);
+  if (!ctx) throw new Error("useLang ต้องถูกใช้ภายใน LangProvider");
+  return ctx;
+}
