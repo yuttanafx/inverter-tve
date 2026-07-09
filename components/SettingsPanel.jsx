@@ -10,11 +10,17 @@ export default function SettingsPanel() {
   const { t } = useLang();
   const [url, setUrl] = useState(config.url || "");
   const [key, setKey] = useState(config.key || "");
+  const [keyId, setKeyId] = useState(config.keyId || "");
+  const [keySecret, setKeySecret] = useState(config.keySecret || "");
+  const [sn, setSn] = useState(config.sn || "");
 
   useEffect(() => {
     setUrl(config.url || "");
     setKey(config.key || "");
-  }, [config.url, config.key]);
+    setKeyId(config.keyId || "");
+    setKeySecret(config.keySecret || "");
+    setSn(config.sn || "");
+  }, [config.url, config.key, config.keyId, config.keySecret, config.sn]);
 
   const statusMeta = {
     idle: { text: t("settings_status_idle"), color: "var(--text-dim)", icon: Info },
@@ -70,16 +76,68 @@ export default function SettingsPanel() {
           style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
         />
 
+        <div className="rounded-xl p-3 mb-4" style={{ background: "var(--panel-alt)", border: "1px dashed var(--border-strong)" }}>
+          <p className="text-[12px] font-medium mb-2" style={{ color: "var(--text)" }}>
+            {t("settings_solis_section")}
+          </p>
+          <p className="text-[11.5px] leading-relaxed mb-3" style={{ color: "var(--text-dim)" }}>
+            {t("settings_solis_desc")}
+          </p>
+
+          <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+            {t("settings_keyid_label")}
+          </label>
+          <input
+            value={keyId}
+            onChange={(e) => setKeyId(e.target.value)}
+            placeholder={t("settings_keyid_placeholder")}
+            className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+            style={{ background: "var(--panel)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+          />
+
+          <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+            {t("settings_keysecret_label")}
+          </label>
+          <input
+            value={keySecret}
+            onChange={(e) => setKeySecret(e.target.value)}
+            type="password"
+            placeholder={t("settings_keysecret_placeholder")}
+            className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+            style={{ background: "var(--panel)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+          />
+
+          <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+            {t("settings_sn_label")}
+          </label>
+          <input
+            value={sn}
+            onChange={(e) => setSn(e.target.value)}
+            placeholder={t("settings_sn_placeholder")}
+            className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none"
+            style={{ background: "var(--panel)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+          />
+        </div>
+
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <button
-            onClick={() => saveConfig(url, key)}
+            onClick={() => saveConfig({ url, key, keyId, keySecret, sn })}
             className="px-4 py-2 rounded-lg text-[13px] font-medium"
             style={{ background: "#3B82F6", color: "#fff" }}
           >
             {t("settings_save")}
           </button>
           <button
-            onClick={() => url.trim() && testConnection(url.trim())}
+            onClick={() =>
+              url.trim() &&
+              testConnection(url.trim(), {
+                "Content-Type": "application/json",
+                ...(key ? { Authorization: `Bearer ${key}` } : {}),
+                ...(keyId ? { "x-solis-key-id": keyId } : {}),
+                ...(keySecret ? { "x-solis-key-secret": keySecret } : {}),
+                ...(sn ? { "x-solis-sn": sn } : {}),
+              })
+            }
             className="px-4 py-2 rounded-lg text-[13px] font-medium"
             style={{ background: "var(--panel-alt)", color: "var(--text)", border: "1px solid var(--border-strong)" }}
           >
