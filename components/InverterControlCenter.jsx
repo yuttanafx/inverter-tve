@@ -14,7 +14,6 @@ import {
   ResponsiveContainer, Legend, ReferenceDot,
 } from "recharts";
 import { useLang } from "@/lib/i18n";
-import { useApiConfig } from "@/lib/apiConfig";
 import { useInverterData } from "@/lib/useInverterData";
 import ThemeToggle from "./ThemeToggle";
 import LangToggle from "./LangToggle";
@@ -134,6 +133,17 @@ const ANOMALIES = [
   { id: "a2", severity: "medium", icon: Clock, color: "#F0B429", th: "อุปกรณ์ทำงานนอกเวลาปกติ", en: "Device active outside usual hours", descTh: "แอร์ห้องนอนเปิดตอนตี 3 ซึ่งไม่ตรงกับรูปแบบการใช้งานปกติ", descEn: "Bedroom AC turned on at 3 AM, which doesn't match the usual pattern", time: "03:10" },
   { id: "a3", severity: "low", icon: Info, color: "#3B82F6", th: "ประสิทธิภาพแผงโซลาร์ลดลง", en: "Solar panel efficiency dropped", descTh: "ผลผลิตต่ำกว่าค่าเฉลี่ย 12% เทียบกับสภาพอากาศเดียวกัน", descEn: "Output is 12% below average for the same weather conditions", time: "วันนี้" },
 ];
+
+const INVERTER_MOCK = {
+  model: "MAX 10KTL3-X",
+  statusOk: true,
+  power: "5.2 kW",
+  voltage: "230 V",
+  freq: "50.0 Hz",
+  temp: "32°C",
+  wifiOk: true,
+  updatedAt: "10:30:45",
+};
 
 const NOTICES = [
   { icon: CheckCircle2, color: "#22C55E", time: "10:30", th: "อินเวอร์เตอร์ทำงานปกติ", en: "Inverter operating normally" },
@@ -301,7 +311,7 @@ function useSpeechRecognition(onResult, lang) {
   return { supported, listening, start, stop };
 }
 
-function AiAssistant({ devices, setDevices, machines, setMachines, open, onClose }) {
+function AiAssistant({ devices, setDeviceOn, machines, setMachineStatus, open, onClose }) {
   const { t, lang, pick } = useLang();
   const [log, setLog] = useState([{ who: "ai", text: t("ai_greeting") }]);
   const [input, setInput] = useState("");
@@ -331,9 +341,9 @@ function AiAssistant({ devices, setDevices, machines, setMachines, open, onClose
       if ((wantOn || wantOff) && target) {
         const name = pick(target.th, target.en);
         if (devices.includes(target)) {
-          setDevices((ds) => ds.map((d) => (d.id === target.id ? { ...d, on: wantOn } : d)));
+          setDeviceOn(target.id, wantOn);
         } else {
-          setMachines((ms) => ms.map((m) => (m.id === target.id ? { ...m, status: wantOn ? "on" : "off" } : m)));
+          setMachineStatus(target.id, wantOn ? "on" : "off");
         }
         setLog((l) => [...l, { who: "ai", text: `${wantOn ? t("ai_turned_on") : t("ai_turned_off")} “${name}” ${t("ai_done")}` }]);
       } else if (wantOn || wantOff) {
@@ -416,20 +426,76 @@ function AiAssistant({ devices, setDevices, machines, setMachines, open, onClose
 
 export default function InverterControlCenter() {
   const { t, pick } = useLang();
-  const { isConfigured } = useApiConfig();
   const [navOpen, setNavOpen] = useState(false);
   const [active, setActive] = useState("overview");
   const [roomTab, setRoomTab] = useState("ห้องนั่งเล่น");
   const [lineTab, setLineTab] = useState("ทั้งหมด");
   const [range, setRange] = useState("day");
-  const [devices, setDevices] = useState(DEVICES);
-  const [machines, setMachines] = useState(MACHINES);
   const [aiOpen, setAiOpen] = useState(false);
 
-  const { source } = useInverterData({ devices, machines });
+  const { devices, machines, inverter, source, toggleDevice, toggleMachine, setDeviceOn, setMachineStatus } =
+    useInverterData({ devices: DEVICES, machines: MACHINES, inverter: INVERTER_MOCK });
 
-  const toggleDevice = (id) => setDevices((ds) => ds.map((d) => (d.id === id ? { ...d, on: !d.on } : d)));
-  const toggleMachine = (id) => setMachines((ms) => ms.map((m) => (m.id === id ? { ...m, status: m.status === "on" ? "off" : "on" } : m)));
+  // ---- นำทางแบบ scroll-to-section: กดเมนูแล้วเลื่อนไปโซนที่เกี่ยวข้อง + ไฮไลต์ชั่วครู่ ----
+  const topRef = useRef(null);
+  const devicesSectionRef = useRef(null);
+  const machinesSectionRef = useRef(null);
+  const flowChartSectionRef = useRef(null);
+  const inverterSectionRef = useRef(null);
+  const anomalySectionRef = useRef(null);
+  const pulseTimerRef = useRef(null);
+  const [pulse, setPulse] = useState(null);
+
+  const SECTION_REFS = {
+    top: topRef,
+    devices: devicesSectionRef,
+    machines: machinesSectionRef,
+    flow: flowChartSectionRef,
+    inverter: inverterSectionRef,
+    anomaly: anomalySectionRef,
+  };
+  const NAV_TO_SECTION = {
+    overview: "top",
+    devices: "devices",
+    rooms: "devices",
+    schedule: "devices",
+    modes: "devices",
+    machines: "machines",
+    lines: "machines",
+    factoryPower: "flow",
+    alerts: "anomaly",
+    inverter: "inverter",
+    battery: "flow",
+    reports: "flow",
+    users: "top",
+    settings: null,
+  };
+
+  const goTo = (key) => {
+    setNavOpen(false);
+    const wasInSettings = active === "settings" && key !== "settings";
+    setActive(key);
+    const sectionName = NAV_TO_SECTION[key];
+    if (!sectionName) return;
+
+    const runScroll = () => {
+      SECTION_REFS[sectionName].current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setPulse(sectionName);
+      clearTimeout(pulseTimerRef.current);
+      pulseTimerRef.current = setTimeout(() => setPulse(null), 1400);
+    };
+    // ถ้ากำลังออกจากหน้าตั้งค่า ต้องรอให้ DOM ของหน้า overview mount ก่อนค่อย scroll
+    if (wasInSettings) {
+      requestAnimationFrame(() => requestAnimationFrame(runScroll));
+    } else {
+      runScroll();
+    }
+  };
+
+  const pulseStyle = (name) => ({
+    transition: "box-shadow 0.35s ease",
+    boxShadow: pulse === name ? "0 0 0 3px rgba(59,130,246,0.6), 0 0 32px rgba(59,130,246,0.35)" : "none",
+  });
 
   const filteredDevices = useMemo(() => (roomTab === "ทั้งหมด" ? devices : devices.filter((d) => d.room === roomTab)), [devices, roomTab]);
   const filteredMachines = useMemo(() => (lineTab === "ทั้งหมด" ? machines : machines.filter((m) => m.line === lineTab)), [machines, lineTab]);
@@ -481,7 +547,7 @@ export default function InverterControlCenter() {
                 return (
                   <button
                     key={item.key}
-                    onClick={() => { setActive(item.key); setNavOpen(false); }}
+                    onClick={() => goTo(item.key)}
                     className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg mb-0.5 text-[13px] transition-colors"
                     style={{ background: isActive ? "rgba(59,130,246,0.14)" : "transparent", color: isActive ? "#3B82F6" : "var(--text-muted)" }}
                   >
@@ -538,7 +604,7 @@ export default function InverterControlCenter() {
             <SettingsPanel />
           ) : (
           <>
-          <div className="flex items-center gap-2 flex-wrap mb-1">
+          <div ref={topRef} className="flex items-center gap-2 flex-wrap mb-1 scroll-mt-4">
             <h1 className="text-[21px] sm:text-[24px] font-semibold" style={{ color: "var(--text)", fontFamily: "var(--font-display)" }}>{t("page_title")}</h1>
             <span
               className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full"
@@ -560,7 +626,7 @@ export default function InverterControlCenter() {
             <StatCard icon={DollarSign} iconBg="linear-gradient(135deg,#F0B429,#D97706)" label={t("stat_saved")} value="฿156.75" unit="" delta="10.2%" up suffix={t("vs_yesterday")} />
           </div>
 
-          <div className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-4 mb-5">
+          <div ref={flowChartSectionRef} className="grid grid-cols-1 xl:grid-cols-[1fr_1.3fr] gap-4 mb-5 rounded-2xl scroll-mt-4" style={pulseStyle("flow")}>
             <div className="rounded-2xl p-4 sm:p-5 border" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
               <h2 className="text-[14px] font-medium mb-4" style={{ color: "var(--text)" }}>{t("realtime_status")}</h2>
               <EnergyFlow t={t} />
@@ -599,7 +665,7 @@ export default function InverterControlCenter() {
           </div>
 
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-5">
-            <div className="rounded-2xl p-4 sm:p-5 border" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
+            <div ref={devicesSectionRef} className="rounded-2xl p-4 sm:p-5 border scroll-mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)", ...pulseStyle("devices") }}>
               <h2 className="text-[14px] font-medium mb-3" style={{ color: "var(--text)" }}>{t("home_devices_title")}</h2>
               <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1">
                 {ROOM_TABS.map((r) => (
@@ -612,7 +678,7 @@ export default function InverterControlCenter() {
               <button className="w-full flex items-center justify-center gap-1 text-[12.5px] py-2 rounded-lg" style={{ color: "#3B82F6", background: "rgba(59,130,246,0.08)" }}>{t("view_all_devices")} <ChevronRight size={13} /></button>
             </div>
 
-            <div className="rounded-2xl p-4 sm:p-5 border" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
+            <div ref={machinesSectionRef} className="rounded-2xl p-4 sm:p-5 border scroll-mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)", ...pulseStyle("machines") }}>
               <h2 className="text-[14px] font-medium mb-3" style={{ color: "var(--text)" }}>{t("factory_machines_title")}</h2>
               <div className="flex gap-1.5 mb-2 overflow-x-auto pb-1">
                 {LINE_TABS.map((l) => (
@@ -623,21 +689,21 @@ export default function InverterControlCenter() {
               <button className="w-full flex items-center justify-center gap-1 text-[12.5px] py-2 rounded-lg" style={{ color: "#3B82F6", background: "rgba(59,130,246,0.08)" }}>{t("view_all_machines")} <ChevronRight size={13} /></button>
             </div>
 
-            <div className="rounded-2xl p-4 sm:p-5 border" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
+            <div ref={inverterSectionRef} className="rounded-2xl p-4 sm:p-5 border scroll-mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)", ...pulseStyle("inverter") }}>
               <h2 className="text-[14px] font-medium mb-3" style={{ color: "var(--text)" }}>{t("inverter_status_title")}</h2>
               <div className="rounded-xl p-4 mb-3 flex items-center justify-center" style={{ background: "var(--panel-alt)" }}>
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ background: "linear-gradient(135deg,#3B82F6,#22C55E)" }}><Cpu size={28} color="#fff" /></div>
               </div>
               <dl className="space-y-2 text-[12.5px]">
                 {[
-                  [t("inv_model"), "MAX 10KTL3-X"],
-                  [t("inv_status"), t("inv_status_normal"), "#22C55E"],
-                  [t("inv_power"), "5.2 kW"],
-                  [t("inv_voltage"), "230 V"],
-                  [t("inv_freq"), "50.0 Hz"],
-                  [t("inv_temp"), "32°C"],
-                  [t("inv_wifi"), t("inv_wifi_connected"), "#3B82F6"],
-                  [t("inv_updated"), "10:30:45"],
+                  [t("inv_model"), inverter?.model ?? "—"],
+                  [t("inv_status"), inverter?.statusOk === false ? t("inv_status_abnormal") : t("inv_status_normal"), inverter?.statusOk === false ? "#F0475C" : "#22C55E"],
+                  [t("inv_power"), inverter?.power ?? "—"],
+                  [t("inv_voltage"), inverter?.voltage ?? "—"],
+                  [t("inv_freq"), inverter?.freq ?? "—"],
+                  [t("inv_temp"), inverter?.temp ?? "—"],
+                  [t("inv_wifi"), inverter?.wifiOk === false ? t("inv_wifi_disconnected") : t("inv_wifi_connected"), inverter?.wifiOk === false ? "#F0475C" : "#3B82F6"],
+                  [t("inv_updated"), inverter?.updatedAt ?? "—"],
                 ].map(([k, v, c]) => (
                   <div key={k} className="flex items-center justify-between">
                     <dt style={{ color: "var(--text-faint)" }}>{k}</dt>
@@ -650,7 +716,7 @@ export default function InverterControlCenter() {
           </div>
 
           {/* Usage behavior & anomaly detection */}
-          <div className="rounded-2xl p-4 sm:p-5 border mb-5" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
+          <div ref={anomalySectionRef} className="rounded-2xl p-4 sm:p-5 border mb-5 scroll-mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)", ...pulseStyle("anomaly") }}>
             <div className="flex items-center gap-2 mb-4">
               <ShieldAlert size={16} style={{ color: "#F0475C" }} />
               <h2 className="text-[14px] font-medium" style={{ color: "var(--text)" }}>{t("anomaly_title")}</h2>
@@ -700,7 +766,7 @@ export default function InverterControlCenter() {
                 </div>
               );
             })}
-            <button className="ml-auto flex items-center gap-1 text-[12.5px] shrink-0" style={{ color: "#3B82F6" }}>{t("notices_view_all")} <ChevronRight size={13} /></button>
+            <button onClick={() => goTo("alerts")} className="ml-auto flex items-center gap-1 text-[12.5px] shrink-0" style={{ color: "#3B82F6" }}>{t("notices_view_all")} <ChevronRight size={13} /></button>
           </div>
           </>
           )}
@@ -716,7 +782,7 @@ export default function InverterControlCenter() {
       >
         <Mic size={22} color="#fff" />
       </button>
-      <AiAssistant devices={devices} setDevices={setDevices} machines={machines} setMachines={setMachines} open={aiOpen} onClose={() => setAiOpen(false)} />
+      <AiAssistant devices={devices} setDeviceOn={setDeviceOn} machines={machines} setMachineStatus={setMachineStatus} open={aiOpen} onClose={() => setAiOpen(false)} />
 
       {/* Mobile bottom nav */}
       <div className="fixed bottom-0 inset-x-0 z-30 lg:hidden border-t flex items-stretch" style={{ background: "var(--sidebar)", borderColor: "var(--border-strong)" }}>
@@ -724,7 +790,7 @@ export default function InverterControlCenter() {
           const Icon = tab.icon;
           const isActive = active === tab.key;
           return (
-            <button key={tab.key} onClick={() => setActive(tab.key)} className="flex-1 flex flex-col items-center gap-0.5 py-2.5">
+            <button key={tab.key} onClick={() => goTo(tab.key)} className="flex-1 flex flex-col items-center gap-0.5 py-2.5">
               <Icon size={18} style={{ color: isActive ? "#3B82F6" : "var(--text-dim)" }} />
               <span className="text-[10px]" style={{ color: isActive ? "#3B82F6" : "var(--text-dim)" }}>{t(tab.labelKey)}</span>
             </button>
