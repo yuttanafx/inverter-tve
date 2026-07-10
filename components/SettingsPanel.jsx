@@ -6,13 +6,15 @@ import { useApiConfig } from "@/lib/apiConfig";
 import { useLang } from "@/lib/i18n";
 
 export default function SettingsPanel() {
-  const { config, status, saveConfig, clearConfig, testConnection } = useApiConfig();
+  const { config, status, saveConfig, clearConfig, testConnection, saveAiHubUrl } = useApiConfig();
   const { t } = useLang();
   const [url, setUrl] = useState(config.url || "");
   const [key, setKey] = useState(config.key || "");
   const [keyId, setKeyId] = useState(config.keyId || "");
   const [keySecret, setKeySecret] = useState(config.keySecret || "");
   const [sn, setSn] = useState(config.sn || "");
+  const [aiHubUrl, setAiHubUrl] = useState(config.aiHubUrl || "");
+  const [aiHubSaved, setAiHubSaved] = useState(false);
 
   useEffect(() => {
     setUrl(config.url || "");
@@ -20,7 +22,8 @@ export default function SettingsPanel() {
     setKeyId(config.keyId || "");
     setKeySecret(config.keySecret || "");
     setSn(config.sn || "");
-  }, [config.url, config.key, config.keyId, config.keySecret, config.sn]);
+    setAiHubUrl(config.aiHubUrl || "");
+  }, [config.url, config.key, config.keyId, config.keySecret, config.sn, config.aiHubUrl]);
 
   const statusMeta = {
     idle: { text: t("settings_status_idle"), color: "var(--text-dim)", icon: Info },
@@ -165,6 +168,44 @@ export default function SettingsPanel() {
           <p className="text-[11px] mt-2" style={{ color: "var(--text-faint)" }}>
             {t("settings_saved_at")}: {new Date(config.savedAt).toLocaleString()}
           </p>
+        )}
+      </div>
+
+      <div
+        className="rounded-2xl p-4 sm:p-5 border mt-4"
+        style={{ background: "var(--panel)", borderColor: "var(--border)" }}
+      >
+        <p className="text-[13px] font-medium mb-1.5" style={{ color: "var(--text)" }}>
+          {t("settings_ai_hub_section")}
+        </p>
+        <p className="text-[11.5px] leading-relaxed mb-3" style={{ color: "var(--text-dim)" }}>
+          {t("settings_ai_hub_desc")}
+        </p>
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_ai_hub_url_label")}
+        </label>
+        <input
+          value={aiHubUrl}
+          onChange={(e) => {
+            setAiHubUrl(e.target.value);
+            setAiHubSaved(false);
+          }}
+          placeholder={t("settings_ai_hub_url_placeholder")}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        />
+        <button
+          onClick={() => {
+            saveAiHubUrl(aiHubUrl);
+            setAiHubSaved(true);
+          }}
+          className="px-4 py-2 rounded-lg text-[13px] font-medium"
+          style={{ background: "#A78BFA", color: "#fff" }}
+        >
+          {t("settings_ai_hub_save")}
+        </button>
+        {aiHubSaved && (
+          <CheckCircle2 size={15} className="inline-block ml-2 align-middle" style={{ color: "#22C55E" }} />
         )}
       </div>
 

@@ -18,6 +18,7 @@ import { useInverterData } from "@/lib/useInverterData";
 import ThemeToggle from "./ThemeToggle";
 import LangToggle from "./LangToggle";
 import SettingsPanel from "./SettingsPanel";
+import AiMonitorCard from "./AiMonitorCard";
 
 // ---------------------------------------------------------------------------
 // สี status/brand คงเดิมในทั้งสองธีม ส่วน bg/panel/text ใช้ CSS var (ดู globals.css)
@@ -714,6 +715,9 @@ export default function InverterControlCenter() {
               <button className="w-full flex items-center justify-center gap-1 text-[12.5px] py-2 rounded-lg mt-3" style={{ color: "#3B82F6", background: "rgba(59,130,246,0.08)" }}>{t("view_more")} <ChevronRight size={13} /></button>
             </div>
           </div>
+
+          {/* AI ตรวจสอบความผิดปกติ (จาก AI Hub แยกที่ผู้ใช้ตั้งค่าไว้ในหน้า Settings) */}
+          <AiMonitorCard />
 
           {/* Usage behavior & anomaly detection */}
           <div ref={anomalySectionRef} className="rounded-2xl p-4 sm:p-5 border mb-5 scroll-mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)", ...pulseStyle("anomaly") }}>

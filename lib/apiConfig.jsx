@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 const ApiConfigContext = createContext(null);
-const STORAGE_KEY = "inverter_api_config"; // { url, key, keyId, keySecret, sn, savedAt }
+const STORAGE_KEY = "inverter_api_config"; // { url, key, keyId, keySecret, sn, aiHubUrl, savedAt }
 
 // สร้าง headers สำหรับยิง request ไปยัง API ของเครื่อง โดยอิงจากค่าที่ผู้ใช้กรอกไว้ในหน้าตั้งค่า
 // - key            -> Authorization: Bearer (สำหรับ API ทั่วไปที่ใช้ bearer token)
@@ -17,15 +17,17 @@ export function buildAuthHeaders(config) {
   return headers;
 }
 
+const EMPTY_CONFIG = { url: "", key: "", keyId: "", keySecret: "", sn: "", aiHubUrl: "", savedAt: null };
+
 export function ApiConfigProvider({ children }) {
-  const [config, setConfig] = useState({ url: "", key: "", keyId: "", keySecret: "", sn: "", savedAt: null });
+  const [config, setConfig] = useState(EMPTY_CONFIG);
   const [status, setStatus] = useState("idle"); // idle | testing | ok | fail
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setConfig(JSON.parse(raw));
+      if (raw) setConfig({ ...EMPTY_CONFIG, ...JSON.parse(raw) });
     } catch (e) {}
     setMounted(true);
   }, []);
@@ -63,16 +65,17 @@ export function ApiConfigProvider({ children }) {
     [config]
   );
 
-  // fields: { url, key, keyId, keySecret, sn }
+  // fields: { url, key, keyId, keySecret, sn } — ไม่แตะ aiHubUrl เพื่อไม่ให้ค่าที่ตั้งไว้หายเวลาบันทึกฝั่ง Solis ใหม่
   const saveConfig = useCallback(
     async (fields) => {
       const trimmed = (fields.url || "").trim();
       if (!trimmed) {
-        persist({ url: "", key: "", keyId: "", keySecret: "", sn: "", savedAt: null });
+        persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl });
         setStatus("idle");
         return;
       }
       const next = {
+        ...config,
         url: trimmed,
         key: (fields.key || "").trim(),
         keyId: (fields.keyId || "").trim(),
@@ -83,19 +86,27 @@ export function ApiConfigProvider({ children }) {
       persist(next);
       await testConnection(trimmed, buildAuthHeaders(next));
     },
-    [testConnection]
+    [testConnection, config]
   );
 
   const clearConfig = useCallback(() => {
-    persist({ url: "", key: "", keyId: "", keySecret: "", sn: "", savedAt: null });
+    persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl });
     setStatus("idle");
-  }, []);
+  }, [config.aiHubUrl]);
+
+  // เก็บ URL ของ AI Hub แยกต่างหาก ไม่เกี่ยวกับสถานะเชื่อมต่อ Solis (source == "ok"/"fail")
+  const saveAiHubUrl = useCallback(
+    (url) => {
+      persist({ ...config, aiHubUrl: (url || "").trim() });
+    },
+    [config]
+  );
 
   const isConfigured = mounted && !!config.url;
 
   return (
     <ApiConfigContext.Provider
-      value={{ config, status, setStatus, saveConfig, clearConfig, testConnection, isConfigured, mounted }}
+      value={{ config, status, setStatus, saveConfig, clearConfig, testConnection, saveAiHubUrl, isConfigured, mounted }}
     >
       {children}
     </ApiConfigContext.Provider>
