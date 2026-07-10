@@ -25,7 +25,7 @@ export function buildTuyaHeaders(config) {
     "x-tuya-client-id": config.tuyaClientId || "",
     "x-tuya-client-secret": config.tuyaClientSecret || "",
     "x-tuya-uid": config.tuyaUid || "",
-    "x-tuya-region": config.tuyaRegion || "eu",
+    "x-tuya-region": config.tuyaRegion || "sg",
   };
 }
 
@@ -44,7 +44,7 @@ const EMPTY_CONFIG = {
   tuyaClientId: "",
   tuyaClientSecret: "",
   tuyaUid: "",
-  tuyaRegion: "eu",
+  tuyaRegion: "sg",
   savedAt: null,
 };
 
@@ -173,7 +173,7 @@ export function ApiConfigProvider({ children }) {
         tuyaClientId: (fields.tuyaClientId || "").trim(),
         tuyaClientSecret: (fields.tuyaClientSecret || "").trim(),
         tuyaUid: (fields.tuyaUid || "").trim(),
-        tuyaRegion: fields.tuyaRegion || "eu",
+        tuyaRegion: fields.tuyaRegion || "sg",
         savedAt: new Date().toISOString(),
       };
       persist(next);
@@ -183,7 +183,7 @@ export function ApiConfigProvider({ children }) {
   );
 
   const clearTuyaConfig = useCallback(() => {
-    persist({ ...config, tuyaClientId: "", tuyaClientSecret: "", tuyaUid: "", tuyaRegion: "eu" });
+    persist({ ...config, tuyaClientId: "", tuyaClientSecret: "", tuyaUid: "", tuyaRegion: "sg" });
     setTuyaStatus("idle");
   }, [config]);
 

@@ -164,7 +164,7 @@ export const DICT = {
     settings_tuya_status_ok: "เชื่อมต่อ Tuya สำเร็จ กำลังดึงอุปกรณ์จริง",
     settings_tuya_status_fail: "เชื่อมต่อ Tuya ไม่สำเร็จ ตรวจสอบ Access ID / Secret / UID / ภูมิภาคอีกครั้ง",
     settings_tuya_note:
-      "วิธีหาค่าเหล่านี้: 1) สมัคร iot.tuya.com แล้วสร้าง Cloud Project 2) เลือก Data Center ให้ตรงกับที่ใช้ในแอป Tuya Smart/Smart Life 3) จะได้ Access ID และ Access Secret 4) ไปที่แท็บ Devices > Link Tuya App Account เพื่อผูกบัญชีแอปเข้ากับโปรเจกต์ แล้วจะได้ UID มาใส่ที่นี่",
+      "วิธีหาค่าเหล่านี้: 1) สมัคร iot.tuya.com แล้วสร้าง Cloud Project (เลือก Development Method เป็น \"Smart Home\") 2) เลือก Data Center ให้ตรงกับที่แอป Tuya Smart/Smart Life ของคุณใช้ — เช็คได้ที่แอป: Me > Settings > Account and Security > Region (ผู้ใช้ในไทย/เวียดนาม/มาเลเซีย/อินโดนีเซีย ส่วนใหญ่จะอยู่ Singapore Data Center ตั้งแต่มิถุนายน 2025 เป็นต้นมา ไม่ใช่ China) 3) จะได้ Access ID และ Access Secret จากแท็บ Overview ในกล่อง \"Authorization Key\" 4) ไปที่แท็บ Devices > Link Tuya App Account > Add App Account แล้วสแกน QR ด้วยแอป Tuya Smart/Smart Life เครื่องเดียวกับที่จับคู่สวิตช์ไว้ จะได้ UID มาใส่ที่นี่",
   },
   en: {
     brand_title: "INVERTER",
@@ -323,7 +323,7 @@ export const DICT = {
     settings_tuya_status_ok: "Connected to Tuya. Pulling your real devices",
     settings_tuya_status_fail: "Couldn't connect to Tuya. Double-check the Access ID / Secret / UID / region",
     settings_tuya_note:
-      "How to get these: 1) Sign up at iot.tuya.com and create a Cloud Project 2) Pick the Data Center matching your Tuya Smart/Smart Life app account 3) You'll get an Access ID and Access Secret 4) Go to Devices > Link Tuya App Account to link your app account, which gives you the UID to enter here.",
+      "How to get these: 1) Sign up at iot.tuya.com and create a Cloud Project (set Development Method to \"Smart Home\") 2) Pick the Data Center matching your Tuya Smart/Smart Life app — check it in the app: Me > Settings > Account and Security > Region (users in Thailand/Vietnam/Malaysia/Indonesia are mostly on the Singapore Data Center since June 2025, not China) 3) You'll get an Access ID and Access Secret in the \"Authorization Key\" box on the Overview tab 4) Go to Devices > Link Tuya App Account > Add App Account and scan the QR with the same Tuya Smart/Smart Life app used to pair your switches — that gives you the UID to enter here.",
   },
 };
 

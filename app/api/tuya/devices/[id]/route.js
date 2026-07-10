@@ -7,7 +7,7 @@ function configFromHeaders(req) {
     clientId: req.headers.get("x-tuya-client-id") || "",
     clientSecret: req.headers.get("x-tuya-client-secret") || "",
     uid: req.headers.get("x-tuya-uid") || "",
-    region: req.headers.get("x-tuya-region") || "eu",
+    region: req.headers.get("x-tuya-region") || "sg",
   };
 }
 

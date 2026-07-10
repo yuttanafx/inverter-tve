@@ -6,6 +6,7 @@ import { useApiConfig } from "@/lib/apiConfig";
 import { useLang } from "@/lib/i18n";
 
 const TUYA_REGIONS = [
+  { value: "sg", label: "Singapore — ไทย/เวียดนาม/มาเลเซีย/อินโดนีเซีย ฯลฯ (openapi-sg.iotbing.com)" },
   { value: "eu", label: "Central Europe (openapi.tuyaeu.com)" },
   { value: "us", label: "Western America (openapi.tuyaus.com)" },
   { value: "cn", label: "China (openapi.tuyacn.com)" },
@@ -39,7 +40,7 @@ export default function SettingsPanel() {
   const [tuyaClientId, setTuyaClientId] = useState(config.tuyaClientId || "");
   const [tuyaClientSecret, setTuyaClientSecret] = useState(config.tuyaClientSecret || "");
   const [tuyaUid, setTuyaUid] = useState(config.tuyaUid || "");
-  const [tuyaRegion, setTuyaRegion] = useState(config.tuyaRegion || "eu");
+  const [tuyaRegion, setTuyaRegion] = useState(config.tuyaRegion || "sg");
 
   useEffect(() => {
     setUrl(config.url || "");
@@ -52,7 +53,7 @@ export default function SettingsPanel() {
     setTuyaClientId(config.tuyaClientId || "");
     setTuyaClientSecret(config.tuyaClientSecret || "");
     setTuyaUid(config.tuyaUid || "");
-    setTuyaRegion(config.tuyaRegion || "eu");
+    setTuyaRegion(config.tuyaRegion || "sg");
   }, [
     config.url,
     config.key,
