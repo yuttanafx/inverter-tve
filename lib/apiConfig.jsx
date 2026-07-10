@@ -17,7 +17,7 @@ export function buildAuthHeaders(config) {
   return headers;
 }
 
-const EMPTY_CONFIG = { url: "", key: "", keyId: "", keySecret: "", sn: "", aiHubUrl: "", savedAt: null };
+const EMPTY_CONFIG = { url: "", key: "", keyId: "", keySecret: "", sn: "", aiHubUrl: "", houseId: "", savedAt: null };
 
 export function ApiConfigProvider({ children }) {
   const [config, setConfig] = useState(EMPTY_CONFIG);
@@ -70,7 +70,7 @@ export function ApiConfigProvider({ children }) {
     async (fields) => {
       const trimmed = (fields.url || "").trim();
       if (!trimmed) {
-        persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl });
+        persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl, houseId: config.houseId });
         setStatus("idle");
         return;
       }
@@ -90,9 +90,9 @@ export function ApiConfigProvider({ children }) {
   );
 
   const clearConfig = useCallback(() => {
-    persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl });
+    persist({ ...EMPTY_CONFIG, aiHubUrl: config.aiHubUrl, houseId: config.houseId });
     setStatus("idle");
-  }, [config.aiHubUrl]);
+  }, [config.aiHubUrl, config.houseId]);
 
   // เก็บ URL ของ AI Hub แยกต่างหาก ไม่เกี่ยวกับสถานะเชื่อมต่อ Solis (source == "ok"/"fail")
   const saveAiHubUrl = useCallback(
@@ -102,11 +102,19 @@ export function ApiConfigProvider({ children }) {
     [config]
   );
 
+  // house id ของบ้านนี้ใน HOUSES_CONFIG ของ AI Hub (ไว้ต่อท้าย ?house= ตอนเรียก /api/insights)
+  const saveHouseId = useCallback(
+    (id) => {
+      persist({ ...config, houseId: (id || "").trim() });
+    },
+    [config]
+  );
+
   const isConfigured = mounted && !!config.url;
 
   return (
     <ApiConfigContext.Provider
-      value={{ config, status, setStatus, saveConfig, clearConfig, testConnection, saveAiHubUrl, isConfigured, mounted }}
+      value={{ config, status, setStatus, saveConfig, clearConfig, testConnection, saveAiHubUrl, saveHouseId, isConfigured, mounted }}
     >
       {children}
     </ApiConfigContext.Provider>

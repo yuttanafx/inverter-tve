@@ -6,7 +6,7 @@ import { useApiConfig } from "@/lib/apiConfig";
 import { useLang } from "@/lib/i18n";
 
 export default function SettingsPanel() {
-  const { config, status, saveConfig, clearConfig, testConnection, saveAiHubUrl } = useApiConfig();
+  const { config, status, saveConfig, clearConfig, testConnection, saveAiHubUrl, saveHouseId } = useApiConfig();
   const { t } = useLang();
   const [url, setUrl] = useState(config.url || "");
   const [key, setKey] = useState(config.key || "");
@@ -14,6 +14,7 @@ export default function SettingsPanel() {
   const [keySecret, setKeySecret] = useState(config.keySecret || "");
   const [sn, setSn] = useState(config.sn || "");
   const [aiHubUrl, setAiHubUrl] = useState(config.aiHubUrl || "");
+  const [houseId, setHouseId] = useState(config.houseId || "");
   const [aiHubSaved, setAiHubSaved] = useState(false);
 
   useEffect(() => {
@@ -23,7 +24,8 @@ export default function SettingsPanel() {
     setKeySecret(config.keySecret || "");
     setSn(config.sn || "");
     setAiHubUrl(config.aiHubUrl || "");
-  }, [config.url, config.key, config.keyId, config.keySecret, config.sn, config.aiHubUrl]);
+    setHouseId(config.houseId || "");
+  }, [config.url, config.key, config.keyId, config.keySecret, config.sn, config.aiHubUrl, config.houseId]);
 
   const statusMeta = {
     idle: { text: t("settings_status_idle"), color: "var(--text-dim)", icon: Info },
@@ -194,9 +196,23 @@ export default function SettingsPanel() {
           className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
           style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
         />
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_house_id_label")}
+        </label>
+        <input
+          value={houseId}
+          onChange={(e) => {
+            setHouseId(e.target.value);
+            setAiHubSaved(false);
+          }}
+          placeholder={t("settings_house_id_placeholder")}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        />
         <button
           onClick={() => {
             saveAiHubUrl(aiHubUrl);
+            saveHouseId(houseId);
             setAiHubSaved(true);
           }}
           className="px-4 py-2 rounded-lg text-[13px] font-medium"

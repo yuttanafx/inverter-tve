@@ -42,10 +42,16 @@ export default function AiMonitorCard() {
         </h2>
         <span
           className="flex items-center gap-1.5 text-[11px] px-2 py-1 rounded-full ml-auto"
-          style={{ color: state === "ok" ? "#22C55E" : state === "fail" ? "#F0475C" : "#8b949e", background: "rgba(139,148,158,0.1)" }}
+          style={{ color: state === "ok" ? "#22C55E" : state === "fail" || state === "missing_house" ? "#F0475C" : "#8b949e", background: "rgba(139,148,158,0.1)" }}
         >
           <CircleDot size={11} />
-          {state === "ok" ? t("ai_monitor_connected") : state === "fail" ? t("ai_monitor_unreachable") : t("ai_monitor_loading")}
+          {state === "ok"
+            ? t("ai_monitor_connected")
+            : state === "fail"
+            ? t("ai_monitor_unreachable")
+            : state === "missing_house"
+            ? t("settings_house_id_label")
+            : t("ai_monitor_loading")}
         </span>
       </div>
 
@@ -71,6 +77,10 @@ export default function AiMonitorCard() {
             </p>
           )}
         </div>
+      ) : state === "missing_house" ? (
+        <p className="text-[12.5px]" style={{ color: "var(--text-dim)" }}>
+          {t("ai_monitor_missing_house")}
+        </p>
       ) : (
         <p className="text-[12.5px]" style={{ color: "var(--text-dim)" }}>
           {state === "fail" ? t("ai_monitor_unreachable_desc") : t("ai_monitor_waiting")}
