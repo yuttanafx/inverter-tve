@@ -1,12 +1,31 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plug, CheckCircle2, XCircle, Loader2, Trash2, Info } from "lucide-react";
+import { Plug, CheckCircle2, XCircle, Loader2, Trash2, Info, Wifi } from "lucide-react";
 import { useApiConfig } from "@/lib/apiConfig";
 import { useLang } from "@/lib/i18n";
 
+const TUYA_REGIONS = [
+  { value: "eu", label: "Central Europe (openapi.tuyaeu.com)" },
+  { value: "us", label: "Western America (openapi.tuyaus.com)" },
+  { value: "cn", label: "China (openapi.tuyacn.com)" },
+  { value: "in", label: "India (openapi.tuyain.com)" },
+];
+
 export default function SettingsPanel() {
-  const { config, status, saveConfig, clearConfig, testConnection, saveAiHubUrl, saveHouseId } = useApiConfig();
+  const {
+    config,
+    status,
+    saveConfig,
+    clearConfig,
+    testConnection,
+    saveAiHubUrl,
+    saveHouseId,
+    tuyaStatus,
+    saveTuyaConfig,
+    clearTuyaConfig,
+    testTuyaConnection,
+  } = useApiConfig();
   const { t } = useLang();
   const [url, setUrl] = useState(config.url || "");
   const [key, setKey] = useState(config.key || "");
@@ -17,6 +36,11 @@ export default function SettingsPanel() {
   const [houseId, setHouseId] = useState(config.houseId || "");
   const [aiHubSaved, setAiHubSaved] = useState(false);
 
+  const [tuyaClientId, setTuyaClientId] = useState(config.tuyaClientId || "");
+  const [tuyaClientSecret, setTuyaClientSecret] = useState(config.tuyaClientSecret || "");
+  const [tuyaUid, setTuyaUid] = useState(config.tuyaUid || "");
+  const [tuyaRegion, setTuyaRegion] = useState(config.tuyaRegion || "eu");
+
   useEffect(() => {
     setUrl(config.url || "");
     setKey(config.key || "");
@@ -25,7 +49,31 @@ export default function SettingsPanel() {
     setSn(config.sn || "");
     setAiHubUrl(config.aiHubUrl || "");
     setHouseId(config.houseId || "");
-  }, [config.url, config.key, config.keyId, config.keySecret, config.sn, config.aiHubUrl, config.houseId]);
+    setTuyaClientId(config.tuyaClientId || "");
+    setTuyaClientSecret(config.tuyaClientSecret || "");
+    setTuyaUid(config.tuyaUid || "");
+    setTuyaRegion(config.tuyaRegion || "eu");
+  }, [
+    config.url,
+    config.key,
+    config.keyId,
+    config.keySecret,
+    config.sn,
+    config.aiHubUrl,
+    config.houseId,
+    config.tuyaClientId,
+    config.tuyaClientSecret,
+    config.tuyaUid,
+    config.tuyaRegion,
+  ]);
+
+  const tuyaStatusMeta = {
+    idle: { text: t("settings_tuya_status_idle"), color: "var(--text-dim)", icon: Info },
+    testing: { text: t("settings_tuya_status_testing"), color: "#F0B429", icon: Loader2 },
+    ok: { text: t("settings_tuya_status_ok"), color: "#22C55E", icon: CheckCircle2 },
+    fail: { text: t("settings_tuya_status_fail"), color: "#F0475C", icon: XCircle },
+  }[tuyaStatus];
+  const TuyaStatusIcon = tuyaStatusMeta.icon;
 
   const statusMeta = {
     idle: { text: t("settings_status_idle"), color: "var(--text-dim)", icon: Info },
@@ -171,6 +219,106 @@ export default function SettingsPanel() {
             {t("settings_saved_at")}: {new Date(config.savedAt).toLocaleString()}
           </p>
         )}
+      </div>
+
+      <div className="rounded-2xl p-4 sm:p-5 border mt-4" style={{ background: "var(--panel)", borderColor: "var(--border)" }}>
+        <div className="flex items-center gap-2 mb-2">
+          <Wifi size={16} style={{ color: "#22C55E" }} />
+          <h2 className="text-[14px] font-medium" style={{ color: "var(--text)" }}>
+            {t("settings_tuya_section")}
+          </h2>
+        </div>
+        <p className="text-[12px] leading-relaxed mb-4" style={{ color: "var(--text-dim)" }}>
+          {t("settings_tuya_desc")}
+        </p>
+
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_tuya_clientid_label")}
+        </label>
+        <input
+          value={tuyaClientId}
+          onChange={(e) => setTuyaClientId(e.target.value)}
+          placeholder={t("settings_tuya_clientid_placeholder")}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        />
+
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_tuya_clientsecret_label")}
+        </label>
+        <input
+          value={tuyaClientSecret}
+          onChange={(e) => setTuyaClientSecret(e.target.value)}
+          type="password"
+          placeholder={t("settings_tuya_clientsecret_placeholder")}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        />
+
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_tuya_uid_label")}
+        </label>
+        <input
+          value={tuyaUid}
+          onChange={(e) => setTuyaUid(e.target.value)}
+          placeholder={t("settings_tuya_uid_placeholder")}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        />
+
+        <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+          {t("settings_tuya_region_label")}
+        </label>
+        <select
+          value={tuyaRegion}
+          onChange={(e) => setTuyaRegion(e.target.value)}
+          className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-4"
+          style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+        >
+          {TUYA_REGIONS.map((r) => (
+            <option key={r.value} value={r.value}>
+              {r.label}
+            </option>
+          ))}
+        </select>
+
+        <div className="flex flex-wrap items-center gap-2 mb-4">
+          <button
+            onClick={() => saveTuyaConfig({ tuyaClientId, tuyaClientSecret, tuyaUid, tuyaRegion })}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium"
+            style={{ background: "#22C55E", color: "#fff" }}
+          >
+            {t("settings_save")}
+          </button>
+          <button
+            onClick={() => testTuyaConnection({ tuyaClientId, tuyaClientSecret, tuyaUid, tuyaRegion })}
+            className="px-4 py-2 rounded-lg text-[13px] font-medium"
+            style={{ background: "var(--panel-alt)", color: "var(--text)", border: "1px solid var(--border-strong)" }}
+          >
+            {t("settings_test")}
+          </button>
+          {config.tuyaClientId && (
+            <button
+              onClick={clearTuyaConfig}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium ml-auto"
+              style={{ color: "#F0475C", background: "rgba(240,71,92,0.1)" }}
+            >
+              <Trash2 size={13} /> {t("settings_clear")}
+            </button>
+          )}
+        </div>
+
+        <div
+          className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[12.5px]"
+          style={{ background: "var(--panel-alt)", color: tuyaStatusMeta.color }}
+        >
+          <TuyaStatusIcon size={15} className={tuyaStatus === "testing" ? "animate-spin" : ""} />
+          {tuyaStatusMeta.text}
+        </div>
+
+        <p className="text-[11px] leading-relaxed mt-3" style={{ color: "var(--text-faint)" }}>
+          {t("settings_tuya_note")}
+        </p>
       </div>
 
       <div

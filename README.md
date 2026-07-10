@@ -87,6 +87,17 @@ components/
 หมายเหตุ: ค่า `room` และ `line` ที่ส่งกลับมาควรตรงกับชื่อแท็บกรองที่มีอยู่แล้วในแดชบอร์ด (เช่น `"ห้องนั่งเล่น"`, `"ไลน์ผลิต 1"`) ไม่งั้นอุปกรณ์นั้นจะไม่ถูกกรองเข้าแท็บที่ถูกต้อง — ถ้าต้องการเพิ่มห้อง/ไลน์ใหม่ ให้แก้ `ROOM_TABS` / `LINE_TABS` ใน `components/InverterControlCenter.jsx` ด้วย
 - **พื้นหลังอนิเมชั่นเบาๆ** — บล็อบไล่สีลอยตัวช้าๆ ด้วย CSS transform (ไม่ใช้ canvas/JS animation loop จึงเบามาก) เคารพ `prefers-reduced-motion` (`components/AnimatedBackground.jsx`)
 - **ฟอนต์โหลดผ่าน `next/font`** แทน `@import` เดิม — self-host อัตโนมัติ ลด request ภายนอก และไม่มี layout shift ตอนโหลดฟอนต์ (เพิ่มความเร็วหน้าเว็บ)
+- **เชื่อมต่อสวิตช์/ปลั๊กไวไฟ Tuya (Tuya Smart / Smart Life)** — ไปที่เมนู "ตั้งค่า" หัวข้อ "เชื่อมต่ออุปกรณ์ Tuya" เพื่อกรอก Access ID / Access Secret / UID / ภูมิภาค อุปกรณ์ Tuya ที่จับคู่ไว้จะมาแสดงในรายการอุปกรณ์ พร้อมสั่งเปิด/ปิดได้จริงจากแดชบอร์ด (`lib/tuyaServer.js`, `app/api/tuya/**`, `lib/useInverterData.js`)
+
+### การเชื่อมต่อ Tuya (สวิตช์/ปลั๊กไวไฟ)
+
+1. สมัคร [iot.tuya.com](https://iot.tuya.com) แล้วสร้าง **Cloud Project** (เลือก Data Center ให้ตรงกับที่ใช้ในแอป Tuya Smart / Smart Life ของคุณ)
+2. จะได้ **Access ID (Client ID)** และ **Access Secret** จากหน้า Cloud > Project
+3. ไปที่แท็บ **Devices > Link Tuya App Account** เพื่อผูกบัญชีแอปที่จับคู่สวิตช์/ปลั๊กไว้เข้ากับ Cloud Project แล้วจะได้ **UID** มา
+4. กรอกค่าทั้งหมด (Access ID, Access Secret, UID, ภูมิภาค) ที่หน้า "ตั้งค่า" ของแดชบอร์ด แล้วกด "บันทึกและเชื่อมต่อ"
+5. อุปกรณ์ Tuya จะปรากฏในรายการอุปกรณ์ (ดึงข้อมูลซ้ำทุก 15 วินาทีเหมือนอุปกรณ์อื่น) กดปุ่มเปิด/ปิดบนแดชบอร์ดได้ทันที
+
+**สถาปัตยกรรม:** ฝั่ง client จะยิงไปที่ `/api/tuya/devices` และ `/api/tuya/devices/{id}` ของเว็บนี้เอง (same-origin) โดยส่ง Access ID/Secret ผ่าน header เท่านั้น จากนั้น Route Handler (`app/api/tuya/**`, รันบน Vercel Function ฝั่งเซิร์ฟเวอร์) จะเป็นผู้เซ็นลายเซ็น HMAC-SHA256 และเรียก Tuya OpenAPI จริงให้ — Access Secret จึงไม่ถูกส่งออกไปยังบุคคลที่สามใดๆ นอกจาก Tuya เอง
 
 ## หมายเหตุ
 

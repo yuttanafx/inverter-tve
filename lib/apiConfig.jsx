@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
 const ApiConfigContext = createContext(null);
-const STORAGE_KEY = "inverter_api_config"; // { url, key, keyId, keySecret, sn, aiHubUrl, savedAt }
+const STORAGE_KEY = "inverter_api_config"; // { url, key, keyId, keySecret, sn, aiHubUrl, tuya*, savedAt }
 
 // สร้าง headers สำหรับยิง request ไปยัง API ของเครื่อง โดยอิงจากค่าที่ผู้ใช้กรอกไว้ในหน้าตั้งค่า
 // - key            -> Authorization: Bearer (สำหรับ API ทั่วไปที่ใช้ bearer token)
@@ -17,11 +17,41 @@ export function buildAuthHeaders(config) {
   return headers;
 }
 
-const EMPTY_CONFIG = { url: "", key: "", keyId: "", keySecret: "", sn: "", aiHubUrl: "", houseId: "", savedAt: null };
+// headers สำหรับ Tuya โดยเฉพาะ — ใช้ยิงไปที่ /api/tuya/* ของเว็บเราเอง (same-origin) เท่านั้น
+// ไม่เอาไปปนกับ buildAuthHeaders เพราะ config.url ด้านบนอาจชี้ไป proxy ภายนอกที่เราไม่ควรส่ง Tuya secret ให้
+export function buildTuyaHeaders(config) {
+  return {
+    "Content-Type": "application/json",
+    "x-tuya-client-id": config.tuyaClientId || "",
+    "x-tuya-client-secret": config.tuyaClientSecret || "",
+    "x-tuya-uid": config.tuyaUid || "",
+    "x-tuya-region": config.tuyaRegion || "eu",
+  };
+}
+
+export function isTuyaConfigured(config) {
+  return !!(config.tuyaClientId && config.tuyaClientSecret && config.tuyaUid);
+}
+
+const EMPTY_CONFIG = {
+  url: "",
+  key: "",
+  keyId: "",
+  keySecret: "",
+  sn: "",
+  aiHubUrl: "",
+  houseId: "",
+  tuyaClientId: "",
+  tuyaClientSecret: "",
+  tuyaUid: "",
+  tuyaRegion: "eu",
+  savedAt: null,
+};
 
 export function ApiConfigProvider({ children }) {
   const [config, setConfig] = useState(EMPTY_CONFIG);
   const [status, setStatus] = useState("idle"); // idle | testing | ok | fail
+  const [tuyaStatus, setTuyaStatus] = useState("idle"); // idle | testing | ok | fail
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -110,11 +140,75 @@ export function ApiConfigProvider({ children }) {
     [config]
   );
 
+  // ทดสอบเชื่อมต่อ Tuya โดยยิงไป /api/tuya/devices (route ภายในเว็บเราเอง ไม่ใช่ Tuya โดยตรง)
+  const testTuyaConnection = useCallback(async (fields) => {
+    const c = fields ?? config;
+    if (!isTuyaConfigured(c)) {
+      setTuyaStatus("idle");
+      return false;
+    }
+    setTuyaStatus("testing");
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 8000);
+      const res = await fetch(`/api/tuya/devices`, { headers: buildTuyaHeaders(c), signal: ctrl.signal });
+      clearTimeout(timer);
+      if (res.ok) {
+        setTuyaStatus("ok");
+        return true;
+      }
+      setTuyaStatus("fail");
+      return false;
+    } catch (e) {
+      setTuyaStatus("fail");
+      return false;
+    }
+  }, [config]);
+
+  // fields: { tuyaClientId, tuyaClientSecret, tuyaUid, tuyaRegion }
+  const saveTuyaConfig = useCallback(
+    async (fields) => {
+      const next = {
+        ...config,
+        tuyaClientId: (fields.tuyaClientId || "").trim(),
+        tuyaClientSecret: (fields.tuyaClientSecret || "").trim(),
+        tuyaUid: (fields.tuyaUid || "").trim(),
+        tuyaRegion: fields.tuyaRegion || "eu",
+        savedAt: new Date().toISOString(),
+      };
+      persist(next);
+      await testTuyaConnection(next);
+    },
+    [config, testTuyaConnection]
+  );
+
+  const clearTuyaConfig = useCallback(() => {
+    persist({ ...config, tuyaClientId: "", tuyaClientSecret: "", tuyaUid: "", tuyaRegion: "eu" });
+    setTuyaStatus("idle");
+  }, [config]);
+
   const isConfigured = mounted && !!config.url;
+  const tuyaConfigured = mounted && isTuyaConfigured(config);
 
   return (
     <ApiConfigContext.Provider
-      value={{ config, status, setStatus, saveConfig, clearConfig, testConnection, saveAiHubUrl, saveHouseId, isConfigured, mounted }}
+      value={{
+        config,
+        status,
+        setStatus,
+        saveConfig,
+        clearConfig,
+        testConnection,
+        saveAiHubUrl,
+        saveHouseId,
+        isConfigured,
+        mounted,
+        tuyaStatus,
+        saveTuyaConfig,
+        clearTuyaConfig,
+        testTuyaConnection,
+        tuyaConfigured,
+      }}
     >
       {children}
     </ApiConfigContext.Provider>

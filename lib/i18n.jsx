@@ -149,6 +149,22 @@ export const DICT = {
     settings_note_title: "รูปแบบ API ที่รองรับ",
     settings_note_body: "ระบบจะเรียก GET {url}/status, GET {url}/devices, GET {url}/machines เพื่อดึงข้อมูล และเรียก PATCH {url}/devices/{id} (body: {on:true/false}) กับ PATCH {url}/machines/{id} (body: {status:\"on\"|\"off\"}) เมื่อคุณกดเปิด/ปิดอุปกรณ์บนแดชบอร์ด หากเครื่องของคุณใช้รูปแบบอื่น สามารถทำ endpoint พร็อกซีให้ตรงรูปแบบนี้ได้ ระบบจะดึงข้อมูลซ้ำอัตโนมัติทุก 15 วินาที",
     settings_saved_at: "บันทึกล่าสุด",
+    settings_tuya_section: "เชื่อมต่ออุปกรณ์ Tuya (สวิตช์/ปลั๊กไวไฟ)",
+    settings_tuya_desc:
+      "เชื่อมสวิตช์ ปลั๊ก และอุปกรณ์ไวไฟที่จับคู่ไว้ในแอป Tuya Smart / Smart Life ให้มาแสดงและสั่งเปิด-ปิดได้จากแดชบอร์ดนี้ ระบบจะยิง request ผ่านเซิร์ฟเวอร์ของเว็บนี้เอง (ไม่ส่ง Client Secret ออกไปที่อื่น) แล้วค่อยเซ็นคำขอไปหา Tuya Cloud ให้อัตโนมัติ",
+    settings_tuya_clientid_label: "Access ID (Client ID)",
+    settings_tuya_clientid_placeholder: "จากหน้า Cloud > Project ใน Tuya IoT Platform",
+    settings_tuya_clientsecret_label: "Access Secret (Client Secret)",
+    settings_tuya_clientsecret_placeholder: "Access Secret จาก Tuya IoT Platform",
+    settings_tuya_uid_label: "Tuya User ID (UID)",
+    settings_tuya_uid_placeholder: "UID ของบัญชีแอปที่ผูกกับ Cloud Project (Link Tuya App Account)",
+    settings_tuya_region_label: "Data Center / ภูมิภาค",
+    settings_tuya_status_idle: "ยังไม่ได้เชื่อมต่อ Tuya — อุปกรณ์ Tuya จะยังไม่แสดงบนแดชบอร์ด",
+    settings_tuya_status_testing: "กำลังทดสอบการเชื่อมต่อ Tuya…",
+    settings_tuya_status_ok: "เชื่อมต่อ Tuya สำเร็จ กำลังดึงอุปกรณ์จริง",
+    settings_tuya_status_fail: "เชื่อมต่อ Tuya ไม่สำเร็จ ตรวจสอบ Access ID / Secret / UID / ภูมิภาคอีกครั้ง",
+    settings_tuya_note:
+      "วิธีหาค่าเหล่านี้: 1) สมัคร iot.tuya.com แล้วสร้าง Cloud Project 2) เลือก Data Center ให้ตรงกับที่ใช้ในแอป Tuya Smart/Smart Life 3) จะได้ Access ID และ Access Secret 4) ไปที่แท็บ Devices > Link Tuya App Account เพื่อผูกบัญชีแอปเข้ากับโปรเจกต์ แล้วจะได้ UID มาใส่ที่นี่",
   },
   en: {
     brand_title: "INVERTER",
@@ -292,6 +308,22 @@ export const DICT = {
     settings_note_title: "Supported API shape",
     settings_note_body: "This dashboard calls GET {url}/status, GET {url}/devices, GET {url}/machines to load data, and PATCH {url}/devices/{id} (body: {on:true/false}) / PATCH {url}/machines/{id} (body: {status:\"on\"|\"off\"}) whenever you toggle something on the dashboard. If your device uses a different format, add a small proxy endpoint that matches this shape. Data refreshes automatically every 15 seconds.",
     settings_saved_at: "Last saved",
+    settings_tuya_section: "Connect Tuya devices (Wi-Fi switches / plugs)",
+    settings_tuya_desc:
+      "Bring switches, plugs, and Wi-Fi devices paired in the Tuya Smart / Smart Life app into this dashboard, with on/off control. Requests go through this site's own server (your Client Secret is never sent anywhere else), which signs and forwards them to Tuya Cloud automatically.",
+    settings_tuya_clientid_label: "Access ID (Client ID)",
+    settings_tuya_clientid_placeholder: "From Cloud > Project in the Tuya IoT Platform",
+    settings_tuya_clientsecret_label: "Access Secret (Client Secret)",
+    settings_tuya_clientsecret_placeholder: "Access Secret from the Tuya IoT Platform",
+    settings_tuya_uid_label: "Tuya User ID (UID)",
+    settings_tuya_uid_placeholder: "UID of the app account linked to your Cloud Project (Link Tuya App Account)",
+    settings_tuya_region_label: "Data Center / Region",
+    settings_tuya_status_idle: "Tuya not connected yet — Tuya devices won't appear on the dashboard",
+    settings_tuya_status_testing: "Testing Tuya connection…",
+    settings_tuya_status_ok: "Connected to Tuya. Pulling your real devices",
+    settings_tuya_status_fail: "Couldn't connect to Tuya. Double-check the Access ID / Secret / UID / region",
+    settings_tuya_note:
+      "How to get these: 1) Sign up at iot.tuya.com and create a Cloud Project 2) Pick the Data Center matching your Tuya Smart/Smart Life app account 3) You'll get an Access ID and Access Secret 4) Go to Devices > Link Tuya App Account to link your app account, which gives you the UID to enter here.",
   },
 };
 
