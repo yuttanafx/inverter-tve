@@ -165,6 +165,17 @@ export const DICT = {
     settings_tuya_status_fail: "เชื่อมต่อ Tuya ไม่สำเร็จ ตรวจสอบ Access ID / Secret / UID / ภูมิภาคอีกครั้ง",
     settings_tuya_note:
       "วิธีหาค่าเหล่านี้: 1) สมัคร iot.tuya.com แล้วสร้าง Cloud Project (เลือก Development Method เป็น \"Smart Home\") 2) เลือก Data Center ให้ตรงกับที่แอป Tuya Smart/Smart Life ของคุณใช้ — เช็คได้ที่แอป: Me > Settings > Account and Security > Region (ผู้ใช้ในไทย/เวียดนาม/มาเลเซีย/อินโดนีเซีย ส่วนใหญ่จะอยู่ Singapore Data Center ตั้งแต่มิถุนายน 2025 เป็นต้นมา ไม่ใช่ China) 3) จะได้ Access ID และ Access Secret จากแท็บ Overview ในกล่อง \"Authorization Key\" 4) ไปที่แท็บ Devices > Link Tuya App Account > Add App Account แล้วสแกน QR ด้วยแอป Tuya Smart/Smart Life เครื่องเดียวกับที่จับคู่สวิตช์ไว้ จะได้ UID มาใส่ที่นี่",
+    settings_hub_sync_section: "ส่งค่านี้ไปตั้งค่าให้บ้านที่ AI Hub อัตโนมัติ",
+    settings_hub_sync_desc:
+      "แทนที่จะต้องพิมพ์ Solis/Tuya ซ้ำอีกรอบที่หน้า /admin ของ AI Hub กดปุ่มด้านล่างเพื่อส่งค่า Solis/Tuya/House ID ที่กรอกไว้ด้านบนไปตั้งค่าให้บ้านนี้ที่ AI Hub ได้เลย (ค่าที่ admin ตั้งไว้เอง เช่น LINE User ID จะไม่ถูกลบทิ้ง)",
+    settings_house_name_label: "ชื่อบ้าน (แสดงในแจ้งเตือน LINE และหน้า /admin)",
+    settings_house_name_placeholder: "เช่น บ้านคุณสมชาย",
+    settings_hub_admin_secret_label: "รหัสผ่านแอดมิน AI Hub",
+    settings_hub_admin_secret_placeholder: "ค่าเดียวกับ HUB_ADMIN_SECRET ที่ตั้งไว้ในโปรเจกต์ AI Hub",
+    settings_hub_sync_button: "ส่งค่านี้ไปที่ AI Hub",
+    settings_hub_sync_syncing: "กำลังส่งข้อมูลไปที่ AI Hub…",
+    settings_hub_sync_ok: "ส่งข้อมูลไปที่ AI Hub สำเร็จ",
+    settings_hub_sync_fail: "ส่งข้อมูลไม่สำเร็จ ตรวจสอบ AI Hub URL / House ID / รหัสผ่านแอดมินอีกครั้ง",
   },
   en: {
     brand_title: "INVERTER",
@@ -324,6 +335,17 @@ export const DICT = {
     settings_tuya_status_fail: "Couldn't connect to Tuya. Double-check the Access ID / Secret / UID / region",
     settings_tuya_note:
       "How to get these: 1) Sign up at iot.tuya.com and create a Cloud Project (set Development Method to \"Smart Home\") 2) Pick the Data Center matching your Tuya Smart/Smart Life app — check it in the app: Me > Settings > Account and Security > Region (users in Thailand/Vietnam/Malaysia/Indonesia are mostly on the Singapore Data Center since June 2025, not China) 3) You'll get an Access ID and Access Secret in the \"Authorization Key\" box on the Overview tab 4) Go to Devices > Link Tuya App Account > Add App Account and scan the QR with the same Tuya Smart/Smart Life app used to pair your switches — that gives you the UID to enter here.",
+    settings_hub_sync_section: "Auto-sync this house's settings to the AI Hub",
+    settings_hub_sync_desc:
+      "Instead of retyping Solis/Tuya credentials on the AI Hub's /admin page, click below to push the Solis/Tuya/House ID values above straight into this house's record on the AI Hub (fields set only on the admin side, like the LINE User ID, are preserved).",
+    settings_house_name_label: "House name (shown in LINE alerts and the AI Hub /admin page)",
+    settings_house_name_placeholder: "e.g. Somchai's House",
+    settings_hub_admin_secret_label: "AI Hub admin password",
+    settings_hub_admin_secret_placeholder: "Same value as HUB_ADMIN_SECRET on the AI Hub project",
+    settings_hub_sync_button: "Send this to the AI Hub",
+    settings_hub_sync_syncing: "Sending to the AI Hub…",
+    settings_hub_sync_ok: "Synced to the AI Hub successfully",
+    settings_hub_sync_fail: "Sync failed. Double-check the AI Hub URL / House ID / admin password",
   },
 };
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plug, CheckCircle2, XCircle, Loader2, Trash2, Info, Wifi } from "lucide-react";
+import { Plug, CheckCircle2, XCircle, Loader2, Trash2, Info, Wifi, UploadCloud } from "lucide-react";
 import { useApiConfig } from "@/lib/apiConfig";
 import { useLang } from "@/lib/i18n";
 
@@ -22,6 +22,9 @@ export default function SettingsPanel() {
     testConnection,
     saveAiHubUrl,
     saveHouseId,
+    saveHouseSyncMeta,
+    syncToAiHub,
+    hubSyncStatus,
     tuyaStatus,
     saveTuyaConfig,
     clearTuyaConfig,
@@ -35,7 +38,10 @@ export default function SettingsPanel() {
   const [sn, setSn] = useState(config.sn || "");
   const [aiHubUrl, setAiHubUrl] = useState(config.aiHubUrl || "");
   const [houseId, setHouseId] = useState(config.houseId || "");
+  const [houseName, setHouseNameState] = useState(config.houseName || "");
+  const [hubAdminSecret, setHubAdminSecretState] = useState(config.hubAdminSecret || "");
   const [aiHubSaved, setAiHubSaved] = useState(false);
+  const [syncMsg, setSyncMsg] = useState(null);
 
   const [tuyaClientId, setTuyaClientId] = useState(config.tuyaClientId || "");
   const [tuyaClientSecret, setTuyaClientSecret] = useState(config.tuyaClientSecret || "");
@@ -50,6 +56,8 @@ export default function SettingsPanel() {
     setSn(config.sn || "");
     setAiHubUrl(config.aiHubUrl || "");
     setHouseId(config.houseId || "");
+    setHouseNameState(config.houseName || "");
+    setHubAdminSecretState(config.hubAdminSecret || "");
     setTuyaClientId(config.tuyaClientId || "");
     setTuyaClientSecret(config.tuyaClientSecret || "");
     setTuyaUid(config.tuyaUid || "");
@@ -62,6 +70,8 @@ export default function SettingsPanel() {
     config.sn,
     config.aiHubUrl,
     config.houseId,
+    config.houseName,
+    config.hubAdminSecret,
     config.tuyaClientId,
     config.tuyaClientSecret,
     config.tuyaUid,
@@ -75,6 +85,14 @@ export default function SettingsPanel() {
     fail: { text: t("settings_tuya_status_fail"), color: "#F0475C", icon: XCircle },
   }[tuyaStatus];
   const TuyaStatusIcon = tuyaStatusMeta.icon;
+
+  const hubSyncStatusMeta = {
+    idle: { text: null, color: "var(--text-dim)", icon: Info },
+    syncing: { text: t("settings_hub_sync_syncing"), color: "#F0B429", icon: Loader2 },
+    ok: { text: t("settings_hub_sync_ok"), color: "#22C55E", icon: CheckCircle2 },
+    fail: { text: syncMsg || t("settings_hub_sync_fail"), color: "#F0475C", icon: XCircle },
+  }[hubSyncStatus];
+  const HubSyncIcon = hubSyncStatusMeta.icon;
 
   const statusMeta = {
     idle: { text: t("settings_status_idle"), color: "var(--text-dim)", icon: Info },
@@ -372,6 +390,64 @@ export default function SettingsPanel() {
         {aiHubSaved && (
           <CheckCircle2 size={15} className="inline-block ml-2 align-middle" style={{ color: "#22C55E" }} />
         )}
+
+        <div className="mt-5 pt-4" style={{ borderTop: "1px solid var(--border)" }}>
+          <p className="text-[13px] font-medium mb-1.5" style={{ color: "var(--text)" }}>
+            {t("settings_hub_sync_section")}
+          </p>
+          <p className="text-[11.5px] leading-relaxed mb-3" style={{ color: "var(--text-dim)" }}>
+            {t("settings_hub_sync_desc")}
+          </p>
+
+          <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+            {t("settings_house_name_label")}
+          </label>
+          <input
+            value={houseName}
+            onChange={(e) => setHouseNameState(e.target.value)}
+            placeholder={t("settings_house_name_placeholder")}
+            className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+            style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+          />
+
+          <label className="block text-[12px] mb-1.5" style={{ color: "var(--text-muted)" }}>
+            {t("settings_hub_admin_secret_label")}
+          </label>
+          <input
+            value={hubAdminSecret}
+            onChange={(e) => setHubAdminSecretState(e.target.value)}
+            type="password"
+            placeholder={t("settings_hub_admin_secret_placeholder")}
+            className="w-full rounded-lg px-3 py-2.5 text-[13px] outline-none mb-3"
+            style={{ background: "var(--panel-alt)", border: "1px solid var(--border-strong)", color: "var(--text)" }}
+          />
+
+          <button
+            onClick={async () => {
+              saveAiHubUrl(aiHubUrl);
+              saveHouseId(houseId);
+              saveHouseSyncMeta({ houseName, hubAdminSecret });
+              const result = await syncToAiHub();
+              setSyncMsg(result.ok ? null : result.error);
+            }}
+            disabled={hubSyncStatus === "syncing"}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg text-[13px] font-medium"
+            style={{ background: "#22C55E", color: "#fff", opacity: hubSyncStatus === "syncing" ? 0.7 : 1 }}
+          >
+            <UploadCloud size={14} />
+            {hubSyncStatus === "syncing" ? t("settings_hub_sync_syncing") : t("settings_hub_sync_button")}
+          </button>
+
+          {hubSyncStatus !== "idle" && (
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-[12.5px] mt-3"
+              style={{ background: "var(--panel-alt)", color: hubSyncStatusMeta.color }}
+            >
+              <HubSyncIcon size={15} className={hubSyncStatus === "syncing" ? "animate-spin" : ""} />
+              {hubSyncStatusMeta.text}
+            </div>
+          )}
+        </div>
       </div>
 
       <div

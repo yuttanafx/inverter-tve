@@ -41,6 +41,8 @@ const EMPTY_CONFIG = {
   sn: "",
   aiHubUrl: "",
   houseId: "",
+  houseName: "",
+  hubAdminSecret: "",
   tuyaClientId: "",
   tuyaClientSecret: "",
   tuyaUid: "",
@@ -52,6 +54,7 @@ export function ApiConfigProvider({ children }) {
   const [config, setConfig] = useState(EMPTY_CONFIG);
   const [status, setStatus] = useState("idle"); // idle | testing | ok | fail
   const [tuyaStatus, setTuyaStatus] = useState("idle"); // idle | testing | ok | fail
+  const [hubSyncStatus, setHubSyncStatus] = useState("idle"); // idle | syncing | ok | fail
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -140,6 +143,77 @@ export function ApiConfigProvider({ children }) {
     [config]
   );
 
+  // เก็บชื่อบ้าน + รหัสผ่านแอดมิน AI Hub ไว้ใช้ตอนกดปุ่ม "ส่งค่านี้ไปที่ AI Hub"
+  const saveHouseSyncMeta = useCallback(
+    (fields) => {
+      persist({
+        ...config,
+        houseName: (fields.houseName ?? config.houseName ?? "").trim(),
+        hubAdminSecret: (fields.hubAdminSecret ?? config.hubAdminSecret ?? "").trim(),
+      });
+    },
+    [config]
+  );
+
+  // ส่งค่า Solis + Tuya + House ID ที่กรอกไว้ในหน้านี้ ไปตั้งค่าให้บ้านเดียวกันที่ AI Hub อัตโนมัติ
+  // ผ่าน POST {aiHubUrl}/api/houses (admin endpoint) แทนที่จะต้องพิมพ์ซ้ำสองที่
+  // จะดึงข้อมูลบ้านเดิมจาก AI Hub มาก่อน (ถ้ามี) แล้ว merge เข้าด้วยกัน เพื่อไม่ให้ค่าที่ตั้งไว้เฉพาะฝั่ง admin
+  // (เช่น LINE User ID) หายไปตอน sync
+  const syncToAiHub = useCallback(async () => {
+    const aiHubUrl = (config.aiHubUrl || "").trim().replace(/\/+$/, "");
+    const houseId = (config.houseId || "").trim();
+    const secret = (config.hubAdminSecret || "").trim();
+
+    if (!aiHubUrl || !houseId || !secret) {
+      setHubSyncStatus("fail");
+      return { ok: false, error: "กรอก AI Hub URL, House ID และรหัสผ่านแอดมิน AI Hub ให้ครบก่อน" };
+    }
+
+    setHubSyncStatus("syncing");
+    try {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 10000);
+
+      const listRes = await fetch(`${aiHubUrl}/api/houses`, {
+        headers: { "x-admin-secret": secret },
+        signal: ctrl.signal,
+      });
+      const listJson = await listRes.json().catch(() => ({}));
+      if (!listRes.ok) throw new Error(listJson.error || "รหัสผ่านแอดมินไม่ถูกต้อง หรือเชื่อมต่อ AI Hub ไม่ได้");
+      const existing = (listJson.houses || []).find((h) => h.id === houseId) || {};
+
+      const payload = {
+        ...existing,
+        id: houseId,
+        name: (config.houseName || "").trim() || existing.name || houseId,
+        solisProxyUrl: config.url || "",
+        solisKeyId: config.keyId || "",
+        solisKeySecret: config.keySecret || "",
+        solisSn: config.sn || "",
+        tuyaClientId: config.tuyaClientId || "",
+        tuyaClientSecret: config.tuyaClientSecret || "",
+        tuyaUid: config.tuyaUid || "",
+        tuyaRegion: config.tuyaRegion || "sg",
+      };
+
+      const res = await fetch(`${aiHubUrl}/api/houses`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-admin-secret": secret },
+        body: JSON.stringify(payload),
+        signal: ctrl.signal,
+      });
+      clearTimeout(timer);
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json.error || "ส่งข้อมูลไปที่ AI Hub ไม่สำเร็จ");
+
+      setHubSyncStatus("ok");
+      return { ok: true };
+    } catch (e) {
+      setHubSyncStatus("fail");
+      return { ok: false, error: String(e.message || e) };
+    }
+  }, [config]);
+
   // ทดสอบเชื่อมต่อ Tuya โดยยิงไป /api/tuya/devices (route ภายในเว็บเราเอง ไม่ใช่ Tuya โดยตรง)
   const testTuyaConnection = useCallback(async (fields) => {
     const c = fields ?? config;
@@ -201,6 +275,9 @@ export function ApiConfigProvider({ children }) {
         testConnection,
         saveAiHubUrl,
         saveHouseId,
+        saveHouseSyncMeta,
+        syncToAiHub,
+        hubSyncStatus,
         isConfigured,
         mounted,
         tuyaStatus,
